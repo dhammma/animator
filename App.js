@@ -8,23 +8,127 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+import {Platform, SafeAreaView, Dimensions, StyleSheet, Animated, Easing, Text, View, Button} from 'react-native';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+const { width: fullWidth, height: fullHeight } = Dimensions.get('window');
+
+const Square = ({ animatedValue, startScale, endScale, left, top, width, height }) => (
+  <Animated.View
+    style={[
+      {
+        position: 'absolute',
+        transform: [
+          {
+            scale: animatedValue.interpolate({
+              inputRange: [0, 1],
+              outputRange: [startScale, endScale],
+            })
+          }
+        ]
+      }
+    ]}
+  >
+    <View style={{
+      backgroundColor: 'red',
+      left,
+      top,
+      width,
+      height,
+    }} />
+  </Animated.View>
+);
 
 type Props = {};
 export default class App extends Component<Props> {
+  state = {
+    view: 'grid',
+    carouselAnimation: new Animated.Value(0),
+  }
+
+  showCarousel = () => {
+    Animated.timing(this.state.carouselAnimation, {
+      toValue: 1,
+      timing: 200,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start(() => this.setState({
+      view: 'carousel',
+    }));
+  }
+
+  hideCarousel = () => {
+    Animated.timing(this.state.carouselAnimation, {
+      toValue: 0,
+      timing: 200,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start(() => this.setState({
+      view: 'grid',
+    }));
+  }
+
+  renderButton = () => {
+    const { view } = this.state;
+
+    if (view === 'grid') {
+      return (
+        <Button
+          title="Toggle view"
+          onPress={this.showCarousel}
+        />
+      );
+    }
+
+    return (
+      <Button
+        title="Toggle view"
+        onPress={this.hideCarousel}
+        style={styles.button}
+      />
+    );
+  }
+
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to React Native!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
+        <Square
+          left={10}
+          top={50}
+          width={80}
+          height={80}
+          startScale={1}
+          endScale={0}
+          animatedValue={this.state.carouselAnimation}
+        />
+        <Square
+          left={200}
+          top={100}
+          width={70}
+          height={90}
+          startScale={1}
+          endScale={0}
+          animatedValue={this.state.carouselAnimation}
+        />
+
+        <Square
+          left={80}
+          top={150}
+          width={120}
+          height={220}
+          startScale={1}
+          endScale={0}
+          animatedValue={this.state.carouselAnimation}
+        />
+        <View style={{
+          position: 'absolute',
+          bottom: 50,
+          left: 50,
+          right: 50,
+          height: 50,
+        }}
+        >
+          {this.renderButton()}
+        </View>
       </View>
     );
   }
@@ -33,18 +137,15 @@ export default class App extends Component<Props> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'black',
     backgroundColor: '#F5FCFF',
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+  button: {
+    position: 'absolute',
+    bottom: 50,
+    left: 50,
+    width: 100,
+    height: 100,
+  }
 });
