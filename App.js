@@ -8,35 +8,122 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, SafeAreaView, Dimensions, StyleSheet, Animated, Easing, Text, View, Button} from 'react-native';
+import {Platform, SafeAreaView, Dimensions, StyleSheet, Animated, Easing, Text, View, TouchableOpacity, Button} from 'react-native';
 
 const { width: fullWidth, height: fullHeight } = Dimensions.get('window');
 
-const Square = ({ animatedValue, startScale, endScale, left, top, width, height }) => (
-  <Animated.View
-    style={[
-      {
-        position: 'absolute',
-        transform: [
-          {
-            scale: animatedValue.interpolate({
-              inputRange: [0, 1],
-              outputRange: [startScale, endScale],
-            })
-          }
-        ]
-      }
-    ]}
-  >
-    <View style={{
-      backgroundColor: 'red',
-      left,
-      top,
-      width,
-      height,
-    }} />
-  </Animated.View>
-);
+class Square extends Component {
+  state = {
+    expanded: false,
+    animatedValue: new Animated.Value(0),
+  }
+
+  showCarousel = () => {
+    Animated.timing(this.state.animatedValue, {
+      toValue: 1,
+      timing: 100,
+      easing: Easing.circle,
+      useNativeDriver: true,
+    }).start(() => this.setState({
+      expanded: true,
+    }));
+  }
+
+  hideCarousel = () => {
+    Animated.timing(this.state.animatedValue, {
+      toValue: 0,
+      timing: 100,
+      easing: Easing.circle,
+      useNativeDriver: true,
+    }).start(() => this.setState({
+      expanded: false,
+    }));
+  }
+
+  toggleAnimation = () => {
+    this.state.expanded ? this.hideCarousel() : this.showCarousel();
+  }
+
+  getTranslateX = () => {
+    const { left } = this.props;
+
+    if (left === 0) {
+      return fullWidth / 3;
+    }
+
+    if (left === 2) {
+      return -fullWidth / 3;
+    }
+
+    return 0;
+  }
+
+  getTranslateY = () => {
+    const { top } = this.props;
+
+    if (top === 0) {
+      return fullWidth / 3;
+    }
+
+    if (top === 2) {
+      return -fullWidth / 3;
+    }
+
+    return 0;
+  }
+
+  render() {
+    const { animatedValue } = this.state;
+    const { left, top, backgroundColor, noAnimate } = this.props;
+
+    return (
+      <View
+          style={{
+            position: 'absolute',
+            left: left * fullWidth / 3,
+            top: top * fullWidth / 3,
+            width: fullWidth / 3,
+            height: fullWidth / 3,
+          }}
+      >
+        <TouchableOpacity onPress={this.toggleAnimation}>
+            <Animated.View
+            style={[
+              {
+                transform: noAnimate ? [] : [
+                  {
+                    translateX: animatedValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, this.getTranslateX()]
+                    })
+                  },
+                  {
+                    translateY: animatedValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, this.getTranslateY()]
+                    })
+                  },
+                  {
+                    scale: animatedValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 3],
+                    })
+                  },
+                ]
+              }
+            ]}
+          >
+            <View style={{
+              backgroundColor,
+              width: fullWidth / 3,
+              height: fullWidth / 3,
+            }} />
+            </Animated.View>
+          </TouchableOpacity>
+      </View>
+    )
+  }
+}
 
 type Props = {};
 export default class App extends Component<Props> {
@@ -45,29 +132,8 @@ export default class App extends Component<Props> {
     carouselAnimation: new Animated.Value(0),
   }
 
-  showCarousel = () => {
-    Animated.timing(this.state.carouselAnimation, {
-      toValue: 1,
-      timing: 200,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }).start(() => this.setState({
-      view: 'carousel',
-    }));
-  }
-
-  hideCarousel = () => {
-    Animated.timing(this.state.carouselAnimation, {
-      toValue: 0,
-      timing: 200,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }).start(() => this.setState({
-      view: 'grid',
-    }));
-  }
-
   renderButton = () => {
+    return null;
     const { view } = this.state;
 
     if (view === 'grid') {
@@ -89,34 +155,66 @@ export default class App extends Component<Props> {
   }
 
   render() {
+    console.log(this.state.carouselAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 3],
+    }));
     return (
       <View style={styles.container}>
         <Square
-          left={10}
-          top={50}
-          width={80}
-          height={80}
-          startScale={1}
-          endScale={0}
+          left={0}
+          top={0}
+          backgroundColor='rgba(0, 0, 0, .5)'
           animatedValue={this.state.carouselAnimation}
         />
         <Square
-          left={200}
-          top={100}
-          width={70}
-          height={90}
-          startScale={1}
-          endScale={0}
+          left={1}
+          top={0}
+          backgroundColor='rgba(255, 0, 0, .5)'
+          animatedValue={this.state.carouselAnimation}
+        />
+        <Square
+          left={2}
+          top={0}
+          backgroundColor='rgba(0, 255, 0, .5)'
           animatedValue={this.state.carouselAnimation}
         />
 
         <Square
-          left={80}
-          top={150}
-          width={120}
-          height={220}
-          startScale={1}
-          endScale={0}
+          left={0}
+          top={1}
+          backgroundColor='rgba(0, 0, 255, .5)'
+          animatedValue={this.state.carouselAnimation}
+        />
+        <Square
+          left={1}
+          top={1}
+          backgroundColor='rgba(255, 255, 0, .5)'
+          animatedValue={this.state.carouselAnimation}
+        />
+        <Square
+          left={2}
+          top={1}
+          backgroundColor='rgba(255, 0, 255, .5)'
+          animatedValue={this.state.carouselAnimation}
+        />
+
+        <Square
+          left={0}
+          top={2}
+          backgroundColor='rgba(0, 255, 255, .5)'
+          animatedValue={this.state.carouselAnimation}
+        />
+        <Square
+          left={1}
+          top={2}
+          backgroundColor='rgba(104, 255, 104, .5)'
+          animatedValue={this.state.carouselAnimation}
+        />
+        <Square
+          left={2}
+          top={2}
+          backgroundColor='rgba(200, 100, 200, .5)'
           animatedValue={this.state.carouselAnimation}
         />
         <View style={{
